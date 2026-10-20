@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#075e54">
+<title>Committee Chat</title>
+<style>
+:root{--g:#075e54;--g2:#128c7e;--bg:#efeae2;--me:#d9fdd3;--tx:#111b21;--mut:#667781}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:#fff;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.v{height:100%;display:flex;flex-direction:column}
+.v[hidden]{display:none}
+header{background:var(--g);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:600}
+header .sp{flex:1}
+header button{background:none;border:0;color:#fff;font-size:15px;padding:6px}
+.body{flex:1;overflow:auto;padding:14px}
+.card{max-width:420px;margin:8vh auto 0;padding:0 18px}
+h1{font-size:24px;margin:0 0 4px;color:var(--g)}
+.mut{color:var(--mut);font-size:14px}
+input[type=text],input[type=tel],input[type=password]{width:100%;padding:13px;margin:6px 0;border:1px solid #cfd8dc;border-radius:10px;font-size:16px}
+button.p{width:100%;padding:13px;margin-top:8px;border:0;border-radius:10px;background:var(--g2);color:#fff;font-size:16px;font-weight:600}
+button.l{background:none;border:0;color:var(--g2);font-size:15px;padding:10px 0;width:100%}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 4px;border-bottom:1px solid #eceff1}
+.row button{border:0;border-radius:8px;padding:8px 12px;background:var(--g2);color:#fff}
+.row button.no{background:#c62828}
+#glist .row{font-weight:600;cursor:pointer}
+#msgs{flex:1;overflow:auto;padding:10px;background:var(--bg)}
+.b{max-width:82%;margin:4px 0;padding:6px 9px;background:#fff;border-radius:10px;width:fit-content;word-break:break-word}
+.b.me{background:var(--me);margin-left:auto}
+.b small{display:block;color:var(--g2);font-weight:600;font-size:12px}
+.b img{max-width:100%;border-radius:8px;display:block}
+.b audio{max-width:220px}
+.t{display:block;text-align:right;font-size:11px;color:var(--mut)}
+.t a{cursor:pointer;margin-left:6px}
+.bar{display:flex;gap:6px;padding:8px;background:#f0f2f5;align-items:center}
+.bar input[type=text]{margin:0;flex:1;border-radius:22px}
+.bar button,.bar label{width:42px;height:42px;border-radius:50%;border:0;background:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;flex:none}
+.bar .send{background:var(--g2);color:#fff}
+.bar .rec{background:#c62828}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));text-align:center;color:#fff;background:#333;border-radius:10px;padding:0;font-size:14px}
+#toast:not(:empty){padding:10px}
+h3{margin:18px 0 4px}
+</style></head><body>
+
+<div id="auth" class="v"><div class="card">
+<h1>Committee Chat</h1>
+<p class="mut">Mobile number aur password se login karo. Naye ho to naam bhi likho aur "Request bhejo" dabao.</p>
+<input id="nm" type="text" placeholder="Naam (sirf naye member ke liye)" autocomplete="name">
+<input id="ph" type="tel" placeholder="Mobile number" autocomplete="username">
+<input id="pw" type="password" placeholder="Password (kam se kam 6 akshar)" autocomplete="current-password">
+<button class="p" onclick="login()">Login</button>
+<button class="l" onclick="signup()">Naya member? Request bhejo</button>
+</div></div>
+
+<div id="pending" class="v" hidden><div class="card">
+<h1>Request bheji gayi</h1>
+<p class="mut">Admin ke OK karne ke baad aap group dekh payenge. Thodi der baad "Dobara dekho" dabao.</p>
+<button class="p" onclick="boot()">Dobara dekho</button>
+<button class="l" onclick="out()">Logout</button>
+</div></div>
+
+<div id="home" class="v" hidden>
+<header><span id="hn">Committee</span><span class="sp"></span><button id="ab" onclick="admin()">Admin</button><button onclick="out()">Logout</button></header>
+<div class="body"><div id="glist"></div></div></div>
+
+<div id="chat" class="v" hidden>
+<header><button onclick="back()">←</button><span id="gt"></span><span class="sp"></span><button id="mb" onclick="members()">Members</button></header>
+<div id="msgs"></div>
+<div class="bar">
+<label>📎<input id="file" type="file" hidden></label>
+<button id="mic" onclick="mic()">🎤</button>
+<input id="txt" type="text" placeholder="Message likho" onkeydown="if(event.key==='Enter')send()">
+<button class="send" onclick="send()">➤</button>
+</div></div>
+
+<div id="admin" class="v" hidden>
+<header><button onclick="home()">←</button><span>Admin</span></header>
+<div class="body">
+<h3>Join requests</h3><div id="req"></div>
+<h3>Naya group</h3>
+<input id="gn" type="text" placeholder="Committee ka naam">
+<button class="p" onclick="newG()">Group banao</button>
+<h3>Mera naam badlo</h3>
+<input id="mn" type="text" placeholder="Naya naam">
+<button class="p" onclick="rename()">Naam save karo</button>
+</div></div>
+
+<div id="mem" class="v" hidden>
+<header><button onclick="openG(gi)">←</button><span>Members</span></header>
+<div class="body"><div id="ml"></div></div></div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const sb=supabase.createClient('https://cdaiphgrmewgvlvudcrj.supabase.co','sb_publishable_e8g_VhbbbJBh66Yd-6EwkQ_apEGh2ns');
+const $=s=>document.querySelector(s);
+let me=null,G=[],grp=null,gi=0,timer=null,sig='';
+const mail=n=>n.replace(/\D/g,'')+'@committee.app';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function show(id){document.querySelectorAll('.v').forEach(e=>e.hidden=e.id!==id)}
+let tt;function msg(t){$('#toast').textContent=t;clearTimeout(tt);tt=setTimeout(()=>$('#toast').textContent='',3500)}
+
+async function boot(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return show('auth');
+  const{data}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
+  me=data;
+  if(!me||me.status!=='approved')return show('pending');
+  $('#hn').textContent=me.name||'Committee';
+  $('#ab').hidden=!me.is_admin;
+  home();
+}
+async function login(){
+  const ph=$('#ph').value.replace(/\D/g,'');
+  if(ph.length<6)return msg('Sahi mobile number likho');
+  const{error}=await sb.auth.signInWithPassword({email:mail(ph),password:$('#pw').value});
+  if(error)return msg('Number ya password galat hai');
+  boot();
+}
+async function signup(){
+  const n=$('#nm').value.trim(),ph=$('#ph').value.replace(/\D/g,'');
+  if(!n)return msg('Pehle apna naam likho');
+  if(ph.length<6)return msg('Sahi mobile number likho');
+  if($('#pw').value.length<6)return msg('Password kam se kam 6 akshar ka rakho');
+  const{error}=await sb.auth.signUp({email:mail(ph),password:$('#pw').value,options:{data:{name:n}}});
+  if(error)return msg('Ye number pehle se juda hai ya galat hai. Login try karo.');
+  boot();
+}
+async function out(){clearInterval(timer);await sb.auth.signOut();me=null;show('auth')}
+
+async function home(){
+  clearInterval(timer);grp=null;show('home');
+  const{data}=await sb.from('groups').select('*').order('created_at');
+  G=data||[];
+  $('#glist').innerHTML=G.map((g,i)=>`<div class="row" onclick="openG(${i})">${esc(g.name)}</div>`).join('')||'<p class="mut">Abhi koi group nahi hai.</p>';
+}
+function back(){home()}
+async function openG(i){
+  gi=i;grp=G[i];$('#gt').textContent=grp.name;$('#mb').hidden=!me.is_admin;
+  show('chat');sig='';await load();clearInterval(timer);timer=setInterval(load,3000);
+}
+function bubble(m){
+  const mine=m.sender_id===me.id;
+  const can=me.is_admin||(mine&&Date.now()-new Date(m.created_at)<864e5);
+  const tm=new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const body=m.kind==='text'?`<div>${esc(m.body)}</div>`:`<div id="f${m.id}">${esc(m.file_name||'file')}...</div>`;
+  return `<div class="b ${mine?'me':''}"><small>${esc(m.profiles?.name||'')}</small>${body}<span class="t">${tm}${can?` <a onclick="del('${m.id}')">🗑</a>`:''}</span></div>`;
+}
+async function load(){
+  if(!grp)return;
+  const{data}=await sb.from('messages').select('*,profiles(name)').eq('group_id',grp.id).order('created_at').limit(200);
+  if(!data)return;
+  const s=data.map(m=>m.id).join();
+  if(s===sig)return;sig=s;
+  const box=$('#msgs'),end=box.scrollHeight-box.scrollTop-box.clientHeight<100||!box.innerHTML;
+  box.innerHTML=data.map(bubble).join('')||'<p class="mut" style="text-align:center">Abhi koi message nahi.</p>';
+  if(end)box.scrollTop=box.scrollHeight;
+  for(const m of data){
+    if(!m.file_url)continue;
+    const{data:u}=await sb.storage.from('chat-files').createSignedUrl(m.file_url,3600);
+    const el=document.getElementById('f'+m.id);
+    if(!el||!u)continue;
+    const url=u.signedUrl;
+    el.innerHTML=m.kind==='image'?`<img src="${url}" alt="">`:m.kind==='audio'?`<audio controls src="${url}"></audio>`:`<a href="${url}" target="_blank" rel="noopener">📄 ${esc(m.file_name)}</a>`;
+    if(end)box.scrollTop=box.scrollHeight;
+  }
+}
+async function send(){
+  const t=$('#txt').value.trim();if(!t)return;
+  $('#txt').value='';
+  const{error}=await sb.from('messages').insert({group_id:grp.id,sender_id:me.id,kind:'text',body:t});
+  if(error)msg('Message nahi gaya');
+  sig='';load();
+}
+async function upl(file,kind){
+  const path=`${grp.id}/${Date.now()}_${file.name.replace(/[^\w.\-]/g,'_')}`;
+  msg('Bhej rahe hain...');
+  const{error}=await sb.storage.from('chat-files').upload(path,file);
+  if(error)return msg('File upload nahi hui');
+  await sb.from('messages').insert({group_id:grp.id,sender_id:me.id,kind,file_url:path,file_name:file.name});
+  msg('Bhej diya');sig='';load();
+}
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)upl(f,f.type.startsWith('image/')?'image':'file');e.target.value=''};
+let rec,chunks=[];
+async function mic(){
+  if(rec&&rec.state==='recording'){rec.stop();return}
+  try{
+    const st=await navigator.mediaDevices.getUserMedia({audio:true});
+    rec=new MediaRecorder(st);chunks=[];
+    rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=()=>{
+      st.getTracks().forEach(t=>t.stop());$('#mic').classList.remove('rec');
+      const type=rec.mimeType||'audio/webm',ext=type.includes('mp4')?'m4a':'webm';
+      upl(new File([new Blob(chunks,{type})],'voice.'+ext,{type}),'audio');
+    };
+    rec.start();$('#mic').classList.add('rec');msg('Record ho raha hai. Rokne ke liye mic dobara dabao.');
+  }catch(e){msg('Mic ki ijazat do')}
+}
+async function del(id){
+  if(!confirm('Ye message delete karein?'))return;
+  const{data:m}=await sb.from('messages').select('file_url').eq('id',id).single();
+  const{error,count}=await sb.from('messages').delete({count:'exact'}).eq('id',id);
+  if(error||!count)return msg('Delete nahi ho sakta. 24 ghante se zyada ho gaye.');
+  if(m&&m.file_url)await sb.storage.from('chat-files').remove([m.file_url]);
+  sig='';load();
+}
+
+async function admin(){
+  show('admin');
+  const{data}=await sb.from('profiles').select('*').eq('status','pending');
+  $('#req').innerHTML=(data||[]).map(p=>`<div class="row"><span>${esc(p.name)}<br><small class="mut">${esc(p.phone)}</small></span><span><button onclick="appr('${p.id}',1)">OK</button> <button class="no" onclick="appr('${p.id}',0)">Mana</button></span></div>`).join('')||'<p class="mut">Koi nayi request nahi.</p>';
+}
+async function appr(id,ok){await sb.from('profiles').update({status:ok?'approved':'rejected'}).eq('id',id);admin()}
+async function newG(){
+  const n=$('#gn').value.trim();if(!n)return msg('Group ka naam likho');
+  const{error}=await sb.from('groups').insert({name:n,created_by:me.id});
+  if(error)return msg('Group nahi bana');
+  $('#gn').value='';msg('Group ban gaya');
+}
+async function rename(){
+  const n=$('#mn').value.trim();if(!n)return;
+  await sb.from('profiles').update({name:n}).eq('id',me.id);
+  me.name=n;$('#hn').textContent=n;$('#mn').value='';msg('Naam badal diya');
+}
+async function members(){
+  clearInterval(timer);show('mem');
+  const[{data:ps},{data:ms}]=await Promise.all([
+    sb.from('profiles').select('*').eq('status','approved'),
+    sb.from('group_members').select('user_id').eq('group_id',grp.id)]);
+  const inn=new Set((ms||[]).map(x=>x.user_id));
+  $('#ml').innerHTML=(ps||[]).map(p=>{const i=inn.has(p.id);return `<div class="row"><span>${esc(p.name)}<br><small class="mut">${esc(p.phone)}</small></span><button class="${i?'no':''}" onclick="tg('${p.id}',${i})">${i?'Nikalo':'Jodo'}</button></div>`}).join('');
+}
+async function tg(uid,inG){
+  if(inG)await sb.from('group_members').delete().eq('group_id',grp.id).eq('user_id',uid);
+  else await sb.from('group_members').insert({group_id:grp.id,user_id:uid,status:'approved'});
+  members();
+}
+boot();
+</script></body></html>
